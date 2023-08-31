@@ -1,0 +1,31 @@
+.card {
+	background-color: var(--base--white);
+	padding: rem(18px);
+	border-radius: rem(8px);
+	border: 1px solid var(--base--border);
+	box-shadow: var(--shadow--md);
+	flex-direction: column;
+}
+
+.top {
+	padding: rem(8px) 0;
+	gap: rem(8px);
+
+	button {
+		background-color: var(--base--white);
+		border-radius: rem(4px);
+		border: solid 1px var(--base--border);
+		padding: rem(8px);
+		cursor: pointer;
+
+		&.selected {
+			background-color: var(--base--blue);
+			border: 1px solid var(--base--blue);
+			color: var(--base--white);
+		}
+	}
+}
+
+.bottom {
+	padding: rem(8px) 0;
+}
