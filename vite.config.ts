@@ -10,10 +10,22 @@ export default defineConfig({
   server: {
     port: 8081,
   },
+  css: {
+		modules: {
+			localsConvention: 'camelCase'
+		}
+	},
   test: {
     globals: true,
-    environment: 'happy-dom',
-    watch: false,
+		environment: 'happy-dom',
+		watch: false,
+		mockReset: true,
+
+		css: {
+			modules: {
+				classNameStrategy: 'non-scoped'
+			}
+		},
 
     // These aliases should be temporary
     // https://github.com/vitest-dev/vitest/issues/1652#issuecomment-1195323396
@@ -23,6 +35,10 @@ export default defineConfig({
         find: "preact/hooks",
         replacement: require.resolve("preact/hooks"),
       },
+      {
+				find: '@preact/signals',
+				replacement: require.resolve('@preact/signals')
+			},
       {
         find: "@testing-library/preact",
         replacement: require.resolve("@testing-library/preact"),

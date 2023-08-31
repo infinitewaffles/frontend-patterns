@@ -1,40 +1,40 @@
 {
-  "name": "list",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
-    "lint": "prettier --check \"src/**/*.{js,jsx,ts,tsx}\"",
-    "test": "vitest",
-    "test-watch": "vitest watch",
-    "coverage": "vitest run --coverage"
-  },
-  "devDependencies": {
-    "@fullhuman/postcss-purgecss": "^5.0.0",
-    "@preact/preset-vite": "^2.5.0",
-    "@testing-library/preact": "^3.2.3",
-    "autoprefixer": "^10.4.14",
-    "cssnano": "^6.0.0",
-    "happy-dom": "^8.9.0",
-    "postcss": "^8.4.21",
-    "postcss-rem": "^2.0.4",
-    "preact": "^10.13.0",
-    "prettier": "^2.8.7",
-    "sanitize.css": "^13.0.0",
-    "sass": "^1.60.0",
-    "typescript": "^4.9.3",
-    "vite": "^4.2.0",
-    "vitest": "^0.29.8"
-  },
-  "prettier": {
-    "singleQuote": true,
-    "trailingComma": "none",
-    "useTabs": true,
-    "tabWidth": 2,
-    "printWidth": 120
-  }
+	"name": "list",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "tsc && vite build",
+		"check": "tsc --noEmit",
+		"format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
+		"lint": "prettier --check \"src/**/*.{js,jsx,ts,tsx}\"",
+		"test": "vitest",
+		"test-watch": "vitest watch"
+	},
+	"devDependencies": {
+		"@preact/preset-vite": "^2.5.0",
+		"@preact/signals": "^1.2.1",
+		"@testing-library/preact": "^3.2.3",
+		"autoprefixer": "^10.4.15",
+		"cssnano": "^6.0.1",
+		"happy-dom": "^10.11.2",
+		"postcss": "^8.4.29",
+		"postcss-rem": "^2.0.4",
+		"preact": "^10.17.1",
+		"preact-router": "^4.1.2",
+		"prettier": "^3.0.3",
+		"sanitize.css": "^13.0.0",
+		"sass": "^1.66.1",
+		"typescript": "^5.2.2",
+		"vite": "^4.4.9",
+		"vitest": "^0.34.3"
+	},
+	"prettier": {
+		"singleQuote": true,
+		"trailingComma": "none",
+		"useTabs": true,
+		"tabWidth": 2,
+		"printWidth": 120
+	}
 }
