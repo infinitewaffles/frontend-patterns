@@ -18,7 +18,7 @@ export const Header: FunctionalComponent<EventHandlers> = ({ onSignIn, onSignOut
 			<h1 class={styles.home}>
 				<Link href={generateUrl({ path: RoutePath.Home })}>UI Patterns</Link>
 			</h1>
-			<div>
+			<div class={styles.user}>
 				{user.userType === UserType.Anonymous ? (
 					<button type="button" onClick={onSignIn}>
 						Sign In
