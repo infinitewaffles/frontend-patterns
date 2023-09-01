@@ -1,39 +1,40 @@
 import { fireEvent, render, screen } from '@testing-library/preact';
 import { describe, expect, it, vi } from 'vitest';
+import { Language } from '../../lib/common';
 import * as Card from './card';
 
 const quotes = {
-	[Card.Language.English]: 'e',
-	[Card.Language.French]: 'f',
-	[Card.Language.Spanish]: 's',
-	[Card.Language.German]: 'g'
+	[Language.English]: 'e',
+	[Language.French]: 'f',
+	[Language.Spanish]: 's',
+	[Language.German]: 'g'
 };
 
 describe('<Card.View> - render', () => {
 	const tests = [
 		{
-			selectedLanguage: Card.Language.English,
+			selectedLanguage: Language.English,
 			want: {
 				quote: 'e',
 				button: 'English'
 			}
 		},
 		{
-			selectedLanguage: Card.Language.French,
+			selectedLanguage: Language.French,
 			want: {
 				quote: 'f',
 				button: 'French'
 			}
 		},
 		{
-			selectedLanguage: Card.Language.Spanish,
+			selectedLanguage: Language.Spanish,
 			want: {
 				quote: 's',
 				button: 'Spanish'
 			}
 		},
 		{
-			selectedLanguage: Card.Language.German,
+			selectedLanguage: Language.German,
 			want: {
 				quote: 'g',
 				button: 'German'
@@ -57,12 +58,12 @@ describe('<Card.View> - events', () => {
 	it('calls onChangeLanguage', () => {
 		const onChangeLanguage = vi.fn();
 		const { container } = render(
-			<Card.View quotes={quotes} selectedLanguage={Card.Language.Spanish} onChangeLanguage={onChangeLanguage} />
+			<Card.View quotes={quotes} selectedLanguage={Language.Spanish} onChangeLanguage={onChangeLanguage} />
 		);
 
 		fireEvent.click(screen.getByText('German'));
 
 		expect(onChangeLanguage).toHaveBeenCalledOnce();
-		expect(onChangeLanguage).toHaveBeenCalledWith(Card.Language.German);
+		expect(onChangeLanguage).toHaveBeenCalledWith(Language.German);
 	});
 });

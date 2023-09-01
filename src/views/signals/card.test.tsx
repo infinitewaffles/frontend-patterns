@@ -1,40 +1,41 @@
 import { signal } from '@preact/signals';
 import { fireEvent, render, screen } from '@testing-library/preact';
 import { describe, expect, it, vi } from 'vitest';
+import { Language } from '../../lib/common';
 import * as Card from './card';
 
 const quotes = {
-	[Card.Language.English]: 'e',
-	[Card.Language.French]: 'f',
-	[Card.Language.Spanish]: 's',
-	[Card.Language.German]: 'g'
+	[Language.English]: 'e',
+	[Language.French]: 'f',
+	[Language.Spanish]: 's',
+	[Language.German]: 'g'
 };
 
 describe('<Card.View> - render', () => {
 	const tests = [
 		{
-			selectedLanguage: Card.Language.English,
+			selectedLanguage: Language.English,
 			want: {
 				quote: 'e',
 				button: 'English'
 			}
 		},
 		{
-			selectedLanguage: Card.Language.French,
+			selectedLanguage: Language.French,
 			want: {
 				quote: 'f',
 				button: 'French'
 			}
 		},
 		{
-			selectedLanguage: Card.Language.Spanish,
+			selectedLanguage: Language.Spanish,
 			want: {
 				quote: 's',
 				button: 'Spanish'
 			}
 		},
 		{
-			selectedLanguage: Card.Language.German,
+			selectedLanguage: Language.German,
 			want: {
 				quote: 'g',
 				button: 'German'
@@ -55,20 +56,20 @@ describe('<Card.View> - render', () => {
 
 describe('<Card.View> - events', () => {
 	it('calls onChangeLanguage', () => {
-		const selectedLanguage = signal(Card.Language.Spanish);
+		const selectedLanguage = signal(Language.Spanish);
 		const onChangeLanguage = vi.fn();
 
 		render(<Card.View quotes={quotes} selectedLanguage={selectedLanguage} onChangeLanguage={onChangeLanguage} />);
 
 		fireEvent.click(screen.getByText('German'));
 
-		expect(selectedLanguage.value).toEqual(Card.Language.German);
+		expect(selectedLanguage.value).toEqual(Language.German);
 		expect(onChangeLanguage).toHaveBeenCalledOnce();
 		expect(onChangeLanguage).toHaveBeenCalledWith();
 	});
 
 	it('calls onNextLanguage', () => {
-		const selectedLanguage = signal(Card.Language.Spanish);
+		const selectedLanguage = signal(Language.Spanish);
 		const onChangeLanguage = vi.fn();
 		const onNextLanguage = vi.fn();
 
@@ -83,14 +84,14 @@ describe('<Card.View> - events', () => {
 
 		fireEvent.keyUp(container.ownerDocument, { code: 'ArrowRight' });
 
-		expect(selectedLanguage.value).toEqual(Card.Language.French);
+		expect(selectedLanguage.value).toEqual(Language.French);
 		expect(onChangeLanguage).not.toHaveBeenCalled();
 		expect(onNextLanguage).toHaveBeenCalledOnce();
 		expect(onNextLanguage).toHaveBeenCalledWith();
 	});
 
 	it('wraps onNextLanguage', () => {
-		const selectedLanguage = signal(Card.Language.German);
+		const selectedLanguage = signal(Language.German);
 		const onChangeLanguage = vi.fn();
 		const onNextLanguage = vi.fn();
 
@@ -105,7 +106,7 @@ describe('<Card.View> - events', () => {
 
 		fireEvent.keyUp(container.ownerDocument, { code: 'ArrowRight' });
 
-		expect(selectedLanguage.value).toEqual(Card.Language.English);
+		expect(selectedLanguage.value).toEqual(Language.English);
 		expect(onChangeLanguage).not.toHaveBeenCalled();
 		expect(onNextLanguage).toHaveBeenCalledOnce();
 		expect(onNextLanguage).toHaveBeenCalledWith();

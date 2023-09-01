@@ -1,0 +1,19 @@
+.header {
+	display: flex;
+	width: 100%;
+	justify-content: space-between;
+	align-items: center;
+	border-bottom: solid 1px var(--base--border);
+	margin-bottom: rem(24px);
+
+	button {
+		margin: rem(12px);
+	}
+}
+
+.home {
+	a {
+		text-decoration: none;
+		color: var(--base--text);
+	}
+}

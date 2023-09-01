@@ -1,15 +1,9 @@
 import { Signal } from '@preact/signals';
 import { FunctionalComponent } from 'preact';
 import { useEffect } from 'preact/hooks';
-import { enumKeys } from '../lib/helpers';
+import { Language } from '../../lib/common';
+import { enumKeys } from '../../lib/helpers';
 import styles from './card.module.scss';
-
-export enum Language {
-	English,
-	Spanish,
-	French,
-	German
-}
 
 const languages = enumKeys(Language);
 

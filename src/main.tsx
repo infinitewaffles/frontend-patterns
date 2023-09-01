@@ -1,5 +1,5 @@
 import { render } from 'preact';
-import { App } from './app';
 import './index.scss';
+import { AppRouter } from './router';
 
-render(<App />, document.getElementById('root') as HTMLElement);
+render(<AppRouter />, document.getElementById('root') as HTMLElement);

@@ -1,13 +1,7 @@
 import { FunctionalComponent } from 'preact';
-import { enumKeys } from '../lib/helpers';
+import { Language } from '../../lib/common';
+import { enumKeys } from '../../lib/helpers';
 import styles from './card.module.scss';
-
-export enum Language {
-	English,
-	Spanish,
-	French,
-	German
-}
 
 interface Args {
 	quotes: Record<Language, string>;
