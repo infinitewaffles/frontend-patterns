@@ -22,8 +22,10 @@ export const View: FunctionalComponent<State> = ({ route }) => {
 			<Grid.View
 				rows={rows.value}
 				drag={drag}
-				onReorder={(r) => {
-					alert(`item moved from position ${r.sourceIdx} to ${r.destIdx}`);
+				onReorder={({ sourceIdx, destIdx }) => {
+					const r = rows.value.slice();
+					r.splice(destIdx, 0, r.splice(sourceIdx, 1)[0]);
+					rows.value = r;
 				}}
 			/>
 		</div>
