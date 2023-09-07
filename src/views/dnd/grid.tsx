@@ -44,7 +44,7 @@ export const View = <R,>({
 					{rows.map((row, i) => (
 						<tr
 							class={`${i === drag?.value?.overIdx ? styles.dragOver : ''}`}
-							draggable={drag?.value?.dragIdx === i || drag?.value?.dragIdx === undefined}
+							draggable={drag !== undefined}
 							onDragOver={(e) => {
 								console.log('over', drag?.value?.overIdx, i);
 
@@ -59,16 +59,7 @@ export const View = <R,>({
 								}
 							}}
 							onDragStart={(e) => {
-								console.log('start');
-
 								if (drag && (e.target as HTMLElement).draggable && gridWrap.current) {
-									drag.value = {
-										dragIdx: i,
-										overIdx: i,
-										ypos: ypos(e.pageY, gridWrap.current.getBoundingClientRect())
-									};
-									console.log('start', drag.value);
-
 									// e.dataTransfer?.setData('application/json', JSON.stringify(row));
 									const img = new Image();
 									img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==';
@@ -77,6 +68,17 @@ export const View = <R,>({
 									if (e.dataTransfer?.effectAllowed) {
 										e.dataTransfer.effectAllowed = 'move';
 									}
+
+									const rect = gridWrap.current.getBoundingClientRect();
+
+									setTimeout(() => {
+										drag.value = {
+											dragIdx: i,
+											overIdx: i,
+											ypos: ypos(e.pageY, rect)
+										};
+										console.log('start', drag.value);
+									}, 1);
 								} else {
 									e.preventDefault();
 								}
@@ -106,7 +108,6 @@ export const View = <R,>({
 			</table>
 			{drag?.value && (
 				<div class={styles.dragItem} style={{ left: 0, top: drag.value?.ypos }}>
-					<span>hover thing</span>
 					<RowView row={rows[drag.value.dragIdx]} rowIdx={0} />
 				</div>
 			)}
