@@ -1,0 +1,24 @@
+.grid {
+	border: solid 1px var(--base--border);
+	width: rem(800px);
+	position: relative;
+	height: fit-content;
+
+	table {
+		width: 100%;
+	}
+}
+.row {
+	padding: rem(16px) rem(12px);
+	border: solid 1px var(--base--border);
+	width: 100%;
+}
+
+.dragItem {
+	position: absolute;
+	z-index: 50;
+}
+
+.dragOver {
+	border: solid 1px red;
+}

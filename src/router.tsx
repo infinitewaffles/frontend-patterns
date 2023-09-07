@@ -6,6 +6,7 @@ import { useEffect } from 'preact/hooks';
 import { GlobalState, UserType } from './lib/state';
 import { RoutePath, parseRoute } from './router-utils';
 import styles from './router.module.scss';
+import DndDemo from './routes/dnd';
 import HomePage from './routes/home';
 import PureDemo from './routes/pure';
 import SignalDemo from './routes/signals';
@@ -18,7 +19,7 @@ export interface RouteHandler<R, S> {
 	View: FunctionalComponent<S>;
 }
 
-export const defaultRouteList: RouteHandler<any, any>[] = [HomePage, PureDemo, SignalDemo];
+export const defaultRouteList: RouteHandler<any, any>[] = [HomePage, PureDemo, SignalDemo, DndDemo];
 
 interface Args {
 	globalState: GlobalState;

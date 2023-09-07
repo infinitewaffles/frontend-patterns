@@ -6,15 +6,17 @@ import { enumKeys } from './lib/helpers';
 export enum RoutePath {
 	Home = '/',
 	Pure = '/pure/:language',
-	Signals = '/signals'
+	Signals = '/signals',
+	Dnd = '/dnd'
 }
 
 export type HomeRoute = { path: RoutePath.Home };
 export type PureRoute = { path: RoutePath.Pure; args: { language?: Language } };
 export type SignalRoute = { path: RoutePath.Signals; args: { language?: Language } };
+export type DndRoute = { path: RoutePath.Dnd };
 
 // AppRoute: contains all possible routes in the app.
-export type AppRoute = HomeRoute | PureRoute | SignalRoute;
+export type AppRoute = HomeRoute | PureRoute | SignalRoute | DndRoute;
 
 // generateUrl: converts an AppRoute to a url that can be pushed to the address bar
 export const generateUrl = (r: AppRoute): string => {
@@ -24,6 +26,8 @@ export const generateUrl = (r: AppRoute): string => {
 	switch (r.path) {
 		case RoutePath.Home:
 			return RoutePath.Home;
+		case RoutePath.Dnd:
+			return RoutePath.Dnd;
 		case RoutePath.Pure:
 			return r.path.replace(':language', r.args.language || Language.English);
 		case RoutePath.Signals:
@@ -63,6 +67,8 @@ export const parseRoute = (route: RouterOnChangeArgs): AppRoute => {
 	switch (normalized) {
 		case RoutePath.Home:
 			return { path: RoutePath.Home };
+		case RoutePath.Dnd:
+			return { path: RoutePath.Dnd };
 		case RoutePath.Pure:
 			return {
 				path: RoutePath.Pure,
