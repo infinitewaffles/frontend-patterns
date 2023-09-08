@@ -7,9 +7,9 @@ import styles from './grid.module.scss';
 import Spatula from './spatula';
 
 export type Drag = {
-	dragIdx: number;
-	overIdx: number;
-	dragPosition: JSXInternal.CSSProperties;
+	sourceIdx: number;
+	destIdx: number;
+	position: JSXInternal.CSSProperties;
 };
 
 export interface Args<Row> {
@@ -58,9 +58,9 @@ export const View = <R,>({
 			}
 
 			const next = {
-				dragIdx: idx,
-				overIdx: idx,
-				dragPosition: dragPosition(
+				sourceIdx: idx,
+				destIdx: idx,
+				position: dragPosition(
 					e.pageY,
 					gridWrap.current.getBoundingClientRect(),
 					(e.target as HTMLElement).getBoundingClientRect()
@@ -75,6 +75,8 @@ export const View = <R,>({
 		}
 	};
 
+	console.log(drag?.value?.position);
+
 	return (
 		<div ref={gridWrap} class={styles.grid}>
 			<table>
@@ -84,69 +86,87 @@ export const View = <R,>({
 					</tr>
 				</thead>
 				<tbody>
-					{rows.map((row, i) => (
-						<tr
-							class={classIf([
-								[styles.dragOverUp, i === drag?.value?.overIdx && i <= drag?.value?.dragIdx],
-								[styles.dragOverDown, i === drag?.value?.overIdx && i > drag?.value?.dragIdx]
-							])}
-							onDragOver={(e) => {
-								if (drag?.value && gridWrap.current) {
-									e.preventDefault();
+					{rows.map((row, i) => {
+						const dragState = drag?.value;
 
-									drag.value = {
-										...drag.value,
-										overIdx: i,
-										dragPosition: dragPosition(
+						return (
+							<tr
+								// This logic needs to consider the mouse position within the item.
+								class={classIf([
+									[styles.dragOver, i === dragState?.destIdx && !!dragState.position.top],
+									[styles.dragOverLast, i === dragState?.destIdx && dragState.position.bottom !== undefined]
+								])}
+								onDragOver={(e) => {
+									if (drag?.value && gridWrap.current) {
+										e.preventDefault();
+
+										console.log(
 											e.pageY,
 											gridWrap.current.getBoundingClientRect(),
 											(e.target as HTMLElement).getBoundingClientRect()
-										)
-									};
-								}
-							}}
-						>
-							<td>
-								<RowView
-									row={row}
-									rowIdx={i}
-									onDragStart={onDragStart(i)}
-									onDragEnd={() => {
-										if (onReorder && drag?.value && drag.value.dragIdx !== drag.value.overIdx) {
-											onReorder({
-												sourceIdx: drag?.value?.dragIdx,
-												destIdx: drag?.value?.overIdx
-											});
-										}
+										);
 
-										if (drag) {
-											drag.value = undefined;
-										}
-									}}
-								/>
-							</td>
-						</tr>
-					))}
+										drag.value = {
+											...drag.value,
+											destIdx: i,
+											position: dragPosition(
+												e.pageY,
+												gridWrap.current.getBoundingClientRect(),
+												(e.target as HTMLElement).getBoundingClientRect()
+											)
+										};
+									}
+								}}
+							>
+								<td>
+									<RowView
+										row={row}
+										rowIdx={i}
+										onDragStart={onDragStart(i)}
+										onDragEnd={() => {
+											if (onReorder && drag?.value && drag.value.sourceIdx !== drag.value.destIdx) {
+												onReorder({
+													sourceIdx: drag?.value?.sourceIdx,
+													destIdx: drag?.value?.destIdx
+												});
+											}
+
+											if (drag) {
+												drag.value = undefined;
+											}
+										}}
+									/>
+								</td>
+							</tr>
+						);
+					})}
 				</tbody>
 			</table>
 			{drag?.value && (
-				<div class={styles.dragItem} style={drag.value.dragPosition} onDragOver={(e) => e.preventDefault()}>
-					<RowView row={rows[drag.value.dragIdx]} rowIdx={0} />
+				<div class={styles.dragItem} style={drag.value.position} onDragOver={(e) => e.preventDefault()}>
+					<RowView row={rows[drag.value.sourceIdx]} rowIdx={0} />
 				</div>
 			)}
 		</div>
 	);
 };
 
-const dragPosition = (mouseY: number, wrapperRect: DOMRect, dragOverRect: DOMRect): JSXInternal.CSSProperties => {
-	const halfHeight = dragOverRect.height / 2;
+export const dragPosition = (
+	mouseY: number,
+	wrapperRect: Pick<DOMRect, 'top' | 'height'>,
+	destRect: Pick<DOMRect, 'height'>
+): JSXInternal.CSSProperties => {
+	const lastPosition = wrapperRect.top + wrapperRect.height - destRect.height;
+
+	if (mouseY >= lastPosition) {
+		return { left: 0, bottom: 0 };
+	}
+
+	const halfHeight = destRect.height / 2;
 	const itemTop = mouseY - wrapperRect.top - halfHeight;
-	const itemBottom = itemTop + dragOverRect.height;
 
 	if (itemTop < 0) {
 		return { left: 0, top: 0 };
-	} else if (itemBottom > wrapperRect.height) {
-		return { left: 0, bottom: wrapperRect.height };
 	}
 
 	return { left: 0, top: itemTop };

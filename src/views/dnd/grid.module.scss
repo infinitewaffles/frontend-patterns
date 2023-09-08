@@ -27,14 +27,15 @@
 	opacity: 0.7;
 }
 
-.dragOverUp {
-	border-top: solid 1px red;
+.dragOver {
+	border-top: solid 2px var(--base--blue);
 }
 
-.dragOverDown {
-	border-bottom: solid 1px red;
+.dragOverLast {
+	border-bottom: solid 2px var(--base--blue);
 }
 
 .spatula {
 	margin-right: rem(12px);
+	color: var(--base--blue);
 }
