@@ -96,7 +96,10 @@ export const View = <R,>({
 						return (
 							<tr
 								// This logic needs to consider the mouse position within the item.
-								class={classIf([[styles.dragOver, i === drag?.value?.destIdx]])}
+								class={classIf([
+									[styles.dragOver, i === drag?.value?.destIdx],
+									[styles.dragging, i === drag?.value?.sourceIdx]
+								])}
 								onDragOver={(e) => {
 									console.log('drag over row', i);
 									e.preventDefault();
