@@ -1,0 +1,8 @@
+.dragItem {
+	position: absolute;
+	z-index: 40;
+	width: 100%;
+	background: var(--base--grey);
+	opacity: 0.7;
+	transition: top 150ms ease-out;
+}

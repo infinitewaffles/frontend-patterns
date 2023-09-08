@@ -12,44 +12,12 @@
 		user-select: none;
 	}
 }
-.row {
-	padding: rem(16px) rem(12px);
-	border: solid 1px var(--base--border);
-	width: 100%;
-	user-select: none;
-
-	&:hover .spatula {
-		opacity: 1;
-	}
-}
-
-.dragging {
-	.row:hover .spatula {
+.dragSource {
+	div {
 		opacity: 0;
-	}
-}
-
-.dragItem {
-	position: absolute;
-	z-index: 50;
-	width: 100%;
-	background: var(--base--grey);
-	opacity: 0.7;
-	transition: top 150ms ease-out;
-
-	.spatula {
-		opacity: 1;
 	}
 }
 
 .dragOver {
 	border-top: solid 2px var(--base--blue);
-}
-
-.spatula {
-	opacity: 0;
-	transition: opacity 100ms ease-in;
-	margin-right: rem(12px);
-	color: var(--base--blue);
-	transform: translateX(- rem(20px));
 }

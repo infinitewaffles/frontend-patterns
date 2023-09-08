@@ -1,7 +1,11 @@
 .page {
 	flex-direction: column;
+	padding-bottom: rem(36px);
 }
 
-.reset {
-	padding: rem(12px);
+.row {
+	padding: rem(16px) rem(12px);
+	border: solid 1px var(--base--border);
+	width: 100%;
+	user-select: none;
 }

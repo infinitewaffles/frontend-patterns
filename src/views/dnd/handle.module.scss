@@ -1,0 +1,21 @@
+.handle {
+	justify-content: center;
+	opacity: 0;
+	transition: top 0ms ease-out;
+	width: rem(36px);
+	z-index: 50;
+
+	svg {
+		color: var(--base--blue);
+	}
+}
+.drag,
+.hover,
+.menu {
+	opacity: 1;
+	position: fixed;
+}
+
+.drag {
+	transition: top 150ms ease-out;
+}

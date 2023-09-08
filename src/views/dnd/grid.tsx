@@ -1,30 +1,36 @@
-import { Signal } from '@preact/signals';
+import { Signal, batch, useSignal } from '@preact/signals';
 import { FunctionalComponent } from 'preact';
-import { useRef } from 'preact/hooks';
-import { JSXInternal } from 'preact/src/jsx';
+import { useEffect, useRef } from 'preact/hooks';
 import { classIf } from '../../lib/dom-helpers';
 import styles from './grid.module.scss';
-import Spatula from './spatula';
+import * as Handle from './handle';
+import { useHandle } from './handle';
+import * as Overlay from './overlay';
+import { useHandleIndex } from './utils';
 
-interface DragPositionArgs {
-	wrapperRect?: Pick<DOMRect, 'top'>;
-	destRect: Pick<DOMRect, 'top'>;
+export enum DragStyle {
+	None,
+	Html
 }
 
-export type Drag = {
-	sourceIdx: number;
-	destIdx: number;
-	destRect: Pick<DOMRect, 'top'>;
-};
+export interface Keyed {
+	key: () => string;
+}
 
-export interface Args<Row> {
-	rows: Row[];
-	drag?: Signal<Drag | undefined>;
-	RowView?: FunctionalComponent<{
-		row: Row;
+export type Drag<R> =
+	| { __style: DragStyle.None }
+	| {
+			__style: DragStyle.Html;
+			ItemView: FunctionalComponent<{ row: R }>;
+			dragging?: ReorderArgs;
+	  };
+
+export interface Args<R> {
+	rows: R[];
+	drag: Signal<Drag<R>>;
+	RowView: FunctionalComponent<{
+		row: R;
 		rowIdx: number;
-		onDragStart?: (e: JSXInternal.TargetedDragEvent<any>) => void;
-		onDragEnd?: (e: JSXInternal.TargetedDragEvent<any>) => void;
 	}>;
 }
 
@@ -37,53 +43,21 @@ interface EventHandlers {
 	onReorder?: (args: ReorderArgs) => void;
 }
 
-// const mouseY = signal(0);
+export const View = <R extends Keyed>({ drag, onReorder, rows, RowView }: Args<R> & EventHandlers) => {
+	const gridWrapRef = useRef<HTMLDivElement>(null);
+	const handleTargetRef = useRef<HTMLTableRowElement>(null);
+	const handleIdx = useHandleIndex();
+	const handle = useHandle();
+	const targetRect = useSignal<Pick<DOMRect, 'top' | 'height' | 'left'>>({ top: 0, height: 0, left: 0 });
 
-export const View = <R,>({
-	drag,
-	onReorder,
-	rows,
-	RowView = ({ row, onDragStart, onDragEnd }) => (
-		<div class={styles.row}>
-			<div draggable={!!onDragStart} onDragStart={onDragStart} onDragEnd={onDragEnd}>
-				<Spatula class={styles.spatula} />
-			</div>
-			{typeof row === 'string' ? row : JSON.stringify(row)}
-		</div>
-	)
-}: Args<R> & EventHandlers) => {
-	const gridWrap = useRef<HTMLDivElement>(null);
-	const dragHoverRef = useRef<HTMLDivElement>(null);
-
-	const onDragStart = (idx: number) => (e: JSXInternal.TargetedDragEvent<any>) => {
-		if (drag && (e.target as HTMLElement).draggable) {
-			// https://stackoverflow.com/questions/6481094/html5-drag-and-drop-ondragover-not-firing-in-chrome
-			e.dataTransfer?.setData('text/plain', idx.toString()); //cannot be empty string
-
-			const img = new Image();
-			img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==';
-			e.dataTransfer?.setDragImage(img, 1, 1);
-
-			if (e.dataTransfer?.effectAllowed) {
-				e.dataTransfer.effectAllowed = 'move';
-			}
-
-			const next = {
-				sourceIdx: idx,
-				destIdx: idx,
-				destRect: (e.target as HTMLElement).getBoundingClientRect()
-			};
-
-			setTimeout(() => {
-				drag.value = next;
-			}, 1);
-		} else {
-			e.preventDefault();
+	useEffect(() => {
+		if (handleTargetRef.current) {
+			targetRect.value = handleTargetRef.current.getBoundingClientRect();
 		}
-	};
+	}, [handleTargetRef.current?.getBoundingClientRect()]);
 
 	return (
-		<div ref={gridWrap} class={styles.grid}>
+		<div ref={gridWrapRef} class={styles.grid}>
 			<table>
 				<thead>
 					<tr>
@@ -92,74 +66,90 @@ export const View = <R,>({
 				</thead>
 				<tbody>
 					{rows.map((row, i) => {
-						// console.log(pos, drag?.value?.destIdx);
+						const dragState = drag.value.__style === DragStyle.Html ? drag.value : undefined;
+
 						return (
 							<tr
+								key={row.key()}
+								ref={handleIdx.value === i ? handleTargetRef : undefined}
 								// This logic needs to consider the mouse position within the item.
 								class={classIf([
-									[styles.dragOver, i === drag?.value?.destIdx],
-									[styles.dragging, i === drag?.value?.sourceIdx]
+									[styles.dragOver, i === dragState?.dragging?.destIdx],
+									[styles.dragSource, i === dragState?.dragging?.sourceIdx]
 								])}
+								onMouseEnter={
+									!dragState?.dragging && handleIdx.value !== i
+										? () =>
+												batch(() => {
+													handleIdx.value = i;
+													handle.value = Handle.SpatulaType.Hovering;
+												})
+										: undefined
+								}
 								onDragOver={(e) => {
-									console.log('drag over row', i);
 									e.preventDefault();
 
-									if (drag?.value && drag?.value?.destIdx !== i) {
-										const d = drag?.value;
+									batch(() => {
+										handleIdx.value = i;
 
-										drag.value = {
-											...d,
-											destIdx: i,
-											destRect: (e.target as HTMLElement).getBoundingClientRect()
-										};
-									}
+										if (drag.value.__style === DragStyle.Html && drag.value.dragging) {
+											drag.value = {
+												...drag.value,
+												dragging: {
+													...drag.value.dragging,
+													destIdx: i
+												}
+											};
+										}
+									});
 								}}
 							>
 								<td>
-									<RowView
-										row={row}
-										rowIdx={i}
-										onDragStart={onDragStart(i)}
-										onDragEnd={() => {
-											if (onReorder && drag?.value && drag.value.sourceIdx !== drag.value.destIdx) {
-												onReorder({
-													sourceIdx: drag?.value?.sourceIdx,
-													destIdx: drag?.value?.destIdx
-												});
-											}
-
-											if (drag) {
-												drag.value = undefined;
-											}
-										}}
-									/>
+									<RowView row={row} rowIdx={i} />
 								</td>
 							</tr>
 						);
 					})}
 				</tbody>
 			</table>
-			{drag?.value && (
-				<div
-					ref={dragHoverRef}
-					class={styles.dragItem}
-					style={dragPosition({
-						destRect: drag.value.destRect,
-						wrapperRect: gridWrap.current?.getBoundingClientRect()
-					})}
-				>
-					<RowView row={rows[drag.value.sourceIdx]} rowIdx={0} />
-				</div>
-			)}
+
+			<Handle.View
+				state={handle}
+				targetRect={targetRect.value}
+				onDragStart={() => {
+					if (drag.value.__style === DragStyle.Html && handleIdx.value !== undefined) {
+						drag.value = {
+							...drag.value,
+							dragging: {
+								sourceIdx: handleIdx.value,
+								destIdx: handleIdx.value
+							}
+						};
+					}
+				}}
+				onDragEnd={() =>
+					batch(() => {
+						if (drag.value.__style === DragStyle.Html) {
+							if (onReorder && drag.value.dragging && drag.value.dragging.sourceIdx !== drag.value.dragging.destIdx) {
+								onReorder(drag.value.dragging);
+							}
+
+							drag.value = { ...drag.value, dragging: undefined };
+						}
+					})
+				}
+			>
+				<div style={{ position: 'fixed', top: 100, left: 10 }}>TODO: replace this placeholder with a real menu</div>
+			</Handle.View>
+
+			{drag.value.__style === DragStyle.Html && drag.value.dragging ? (
+				<Overlay.View<R>
+					{...drag.value}
+					wrapperRect={gridWrapRef.current?.getBoundingClientRect() || { top: 0 }}
+					destRect={handleTargetRef.current?.getBoundingClientRect() || { top: 0 }}
+					row={rows[drag.value.dragging.sourceIdx]}
+				/>
+			) : null}
 		</div>
 	);
-};
-
-export const dragPosition = ({ wrapperRect, destRect }: DragPositionArgs): JSXInternal.CSSProperties => {
-	if (wrapperRect && destRect) {
-		const top = destRect.top - wrapperRect.top;
-		return { left: 0, top: top >= 0 ? top : 0 };
-	}
-
-	return {};
 };

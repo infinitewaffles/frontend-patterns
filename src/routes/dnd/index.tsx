@@ -3,6 +3,7 @@ import { FunctionalComponent } from 'preact';
 import { RouteHandler } from '../../router';
 import { DndRoute, RoutePath } from '../../router-utils';
 import * as Grid from '../../views/dnd/grid';
+import { adventureTimeCharacters } from './data';
 import styles from './index.module.scss';
 
 export interface State {
@@ -13,14 +14,27 @@ export const init = (r?: DndRoute) => ({
 	route: r || { path: RoutePath.Dnd }
 });
 
+type TestRow = Grid.Keyed & {
+	name: string;
+};
+
+const rowData = adventureTimeCharacters.map((name) => ({
+	key: () => name,
+	name
+}));
+
 export const View: FunctionalComponent<State> = ({ route }) => {
-	const drag = useSignal<Grid.Drag | undefined>(undefined);
-	const rows = useSignal<string[]>(['jake the dog', 'finn the human', 'princess bubblegum', 'marceline']);
+	const rows = useSignal<TestRow[]>(rowData);
+	const drag = useSignal<Grid.Drag<TestRow>>({
+		__style: Grid.DragStyle.Html,
+		ItemView: ({ row }) => <div class={styles.row}>{row.name}</div>
+	});
 
 	return (
 		<div class={styles.page}>
-			<Grid.View
+			<Grid.View<TestRow>
 				rows={rows.value}
+				RowView={({ row }) => <div class={styles.row}>{row.name}</div>}
 				drag={drag}
 				onReorder={({ sourceIdx, destIdx }) => {
 					const r = rows.value.slice();
