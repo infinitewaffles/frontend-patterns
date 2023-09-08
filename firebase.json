@@ -1,0 +1,39 @@
+{
+	"hosting": [
+		{
+			"target": "incepto-demo",
+			"public": "dist",
+			"ignore": [],
+			"rewrites": [
+				{
+					"source": "**/**",
+					"destination": "/index.html"
+				},
+				{
+					"source": "**",
+					"destination": "./index.html"
+				}
+			],
+			"headers": [
+				{
+					"source": "/**",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=0, s-maxage=300"
+						}
+					]
+				},
+				{
+					"source": "**/*.@(jpg|jpeg|gif|png|svg|webp|js|css|json)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=86400"
+						}
+					]
+				}
+			]
+		}
+	]
+}

@@ -6,10 +6,15 @@ import { classIf } from '../../lib/dom-helpers';
 import styles from './grid.module.scss';
 import Spatula from './spatula';
 
+interface DragPositionArgs {
+	wrapperRect?: Pick<DOMRect, 'top'>;
+	destRect: Pick<DOMRect, 'top'>;
+}
+
 export type Drag = {
 	sourceIdx: number;
 	destIdx: number;
-	position: JSXInternal.CSSProperties;
+	destRect: Pick<DOMRect, 'top'>;
 };
 
 export interface Args<Row> {
@@ -32,6 +37,8 @@ interface EventHandlers {
 	onReorder?: (args: ReorderArgs) => void;
 }
 
+// const mouseY = signal(0);
+
 export const View = <R,>({
 	drag,
 	onReorder,
@@ -46,9 +53,13 @@ export const View = <R,>({
 	)
 }: Args<R> & EventHandlers) => {
 	const gridWrap = useRef<HTMLDivElement>(null);
+	const dragHoverRef = useRef<HTMLDivElement>(null);
+
 	const onDragStart = (idx: number) => (e: JSXInternal.TargetedDragEvent<any>) => {
-		if (drag && (e.target as HTMLElement).draggable && gridWrap.current) {
-			// e.dataTransfer?.setData('application/json', JSON.stringify(row));
+		if (drag && (e.target as HTMLElement).draggable) {
+			// https://stackoverflow.com/questions/6481094/html5-drag-and-drop-ondragover-not-firing-in-chrome
+			e.dataTransfer?.setData('text/plain', idx.toString()); //cannot be empty string
+
 			const img = new Image();
 			img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==';
 			e.dataTransfer?.setDragImage(img, 1, 1);
@@ -60,11 +71,7 @@ export const View = <R,>({
 			const next = {
 				sourceIdx: idx,
 				destIdx: idx,
-				position: dragPosition(
-					e.pageY,
-					gridWrap.current.getBoundingClientRect(),
-					(e.target as HTMLElement).getBoundingClientRect()
-				)
+				destRect: (e.target as HTMLElement).getBoundingClientRect()
 			};
 
 			setTimeout(() => {
@@ -74,8 +81,6 @@ export const View = <R,>({
 			e.preventDefault();
 		}
 	};
-
-	console.log(drag?.value?.position);
 
 	return (
 		<div ref={gridWrap} class={styles.grid}>
@@ -87,33 +92,22 @@ export const View = <R,>({
 				</thead>
 				<tbody>
 					{rows.map((row, i) => {
-						const dragState = drag?.value;
-
+						// console.log(pos, drag?.value?.destIdx);
 						return (
 							<tr
 								// This logic needs to consider the mouse position within the item.
-								class={classIf([
-									[styles.dragOver, i === dragState?.destIdx && !!dragState.position.top],
-									[styles.dragOverLast, i === dragState?.destIdx && dragState.position.bottom !== undefined]
-								])}
+								class={classIf([[styles.dragOver, i === drag?.value?.destIdx]])}
 								onDragOver={(e) => {
-									if (drag?.value && gridWrap.current) {
-										e.preventDefault();
+									console.log('drag over row', i);
+									e.preventDefault();
 
-										console.log(
-											e.pageY,
-											gridWrap.current.getBoundingClientRect(),
-											(e.target as HTMLElement).getBoundingClientRect()
-										);
+									if (drag?.value && drag?.value?.destIdx !== i) {
+										const d = drag?.value;
 
 										drag.value = {
-											...drag.value,
+											...d,
 											destIdx: i,
-											position: dragPosition(
-												e.pageY,
-												gridWrap.current.getBoundingClientRect(),
-												(e.target as HTMLElement).getBoundingClientRect()
-											)
+											destRect: (e.target as HTMLElement).getBoundingClientRect()
 										};
 									}
 								}}
@@ -143,7 +137,14 @@ export const View = <R,>({
 				</tbody>
 			</table>
 			{drag?.value && (
-				<div class={styles.dragItem} style={drag.value.position} onDragOver={(e) => e.preventDefault()}>
+				<div
+					ref={dragHoverRef}
+					class={styles.dragItem}
+					style={dragPosition({
+						destRect: drag.value.destRect,
+						wrapperRect: gridWrap.current?.getBoundingClientRect()
+					})}
+				>
 					<RowView row={rows[drag.value.sourceIdx]} rowIdx={0} />
 				</div>
 			)}
@@ -151,23 +152,11 @@ export const View = <R,>({
 	);
 };
 
-export const dragPosition = (
-	mouseY: number,
-	wrapperRect: Pick<DOMRect, 'top' | 'height'>,
-	destRect: Pick<DOMRect, 'height'>
-): JSXInternal.CSSProperties => {
-	const lastPosition = wrapperRect.top + wrapperRect.height - destRect.height;
-
-	if (mouseY >= lastPosition) {
-		return { left: 0, bottom: 0 };
+export const dragPosition = ({ wrapperRect, destRect }: DragPositionArgs): JSXInternal.CSSProperties => {
+	if (wrapperRect && destRect) {
+		const top = destRect.top - wrapperRect.top;
+		return { left: 0, top: top >= 0 ? top : 0 };
 	}
 
-	const halfHeight = destRect.height / 2;
-	const itemTop = mouseY - wrapperRect.top - halfHeight;
-
-	if (itemTop < 0) {
-		return { left: 0, top: 0 };
-	}
-
-	return { left: 0, top: itemTop };
+	return {};
 };

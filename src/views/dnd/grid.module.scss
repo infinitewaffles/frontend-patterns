@@ -25,14 +25,11 @@
 	width: 100%;
 	background: var(--base--grey);
 	opacity: 0.7;
+	transition: top 150ms ease-out;
 }
 
 .dragOver {
 	border-top: solid 2px var(--base--blue);
-}
-
-.dragOverLast {
-	border-bottom: solid 2px var(--base--blue);
 }
 
 .spatula {
