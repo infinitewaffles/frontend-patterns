@@ -17,6 +17,16 @@
 	border: solid 1px var(--base--border);
 	width: 100%;
 	user-select: none;
+
+	&:hover .spatula {
+		opacity: 1;
+	}
+}
+
+.dragging {
+	.row:hover .spatula {
+		opacity: 0;
+	}
 }
 
 .dragItem {
@@ -42,16 +52,4 @@
 	margin-right: rem(12px);
 	color: var(--base--blue);
 	transform: translateX(- rem(20px));
-
-	&:hover {
-		opacity: 1;
-	}
-}
-
-.dragging {
-	.spatula {
-		&:hover {
-			opacity: 0;
-		}
-	}
 }
