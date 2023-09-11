@@ -130,8 +130,16 @@ export const View = <R extends Keyed>({ drag, onReorder, rows, RowView }: Args<R
 				onDragEnd={() =>
 					batch(() => {
 						if (drag.value.__style === DragStyle.Html) {
-							if (onReorder && drag.value.dragging && drag.value.dragging.sourceIdx !== drag.value.dragging.destIdx) {
-								onReorder(drag.value.dragging);
+							if (onReorder && drag.value.dragging) {
+								const args = drag.value.dragging;
+
+								if (args.destIdx <= 0) {
+									onReorder({ ...args, destIdx: 0 });
+								} else if (args.destIdx < args.sourceIdx) {
+									onReorder(args);
+								} else if (args.destIdx - args.sourceIdx > 1) {
+									onReorder({ ...args, destIdx: args.destIdx - 1 });
+								}
 							}
 
 							drag.value = { ...drag.value, dragging: undefined };

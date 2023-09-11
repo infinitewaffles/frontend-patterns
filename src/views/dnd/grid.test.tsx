@@ -228,11 +228,11 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 		});
 	});
 
-	it('ends dragging, calls Reorder when order is different', async () => {
+	it('ends dragging, calls Reorder when order changes, dest > source', async () => {
 		const drag = signal<Grid.Drag<TestRow>>({
 			__style: Grid.DragStyle.Html,
 			ItemView: vi.fn(),
-			dragging: { sourceIdx: 420, destIdx: 421 }
+			dragging: { sourceIdx: 420, destIdx: 422 }
 		});
 		const rows: TestRow[] = [
 			{ key: () => 'jake', name: 'Jake' },
@@ -273,11 +273,100 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 		});
 	});
 
-	it('ends dragging, does not call Reorder when order is same', async () => {
+	it('ends dragging, calls Reorder when order changes, dest < source', async () => {
+		const drag = signal<Grid.Drag<TestRow>>({
+			__style: Grid.DragStyle.Html,
+			ItemView: vi.fn(),
+			dragging: { sourceIdx: 420, destIdx: 419 }
+		});
+		const rows: TestRow[] = [
+			{ key: () => 'jake', name: 'Jake' },
+			{ key: () => 'marceline', name: 'Marceline' }
+		];
+
+		mocks.HandleView.mockImplementation(({ onDragEnd }) => {
+			setTimeout(() => {
+				onDragEnd();
+			}, 1);
+		});
+
+		const handle = signal({
+			spatulaType: Handle.SpatulaType.Dragging,
+			targetRect: { top: 0, left: 0, height: 0 }
+		});
+		mocks.useHandle.mockReturnValue(handle);
+
+		const handleIndex = signal(419);
+		mocks.useHandleIndex.mockReturnValue(handleIndex);
+
+		const onReorder = vi.fn();
+		render(<Grid.View rows={rows} drag={drag} RowView={({ row }) => <div>{row.name}</div>} onReorder={onReorder} />);
+
+		await waitFor(() => {
+			if (drag.value.__style === Grid.DragStyle.Html) {
+				expect(handleIndex.value).toEqual(419);
+				expect(drag.value.dragging).toEqual(undefined);
+			} else {
+				expect.fail();
+			}
+
+			expect(onReorder).toHaveBeenCalled();
+			expect(onReorder).toHaveBeenCalledWith({ sourceIdx: 420, destIdx: 419 });
+			expect(Overlay.View).toHaveBeenCalled();
+			expect(Handle.View).toHaveBeenCalled();
+			expect(Handle.View).toHaveBeenCalledWith(expect.objectContaining({ state: handle }), expect.anything());
+		});
+	});
+
+	it('ends dragging, does not call Reorder when order is same, dest == source ', async () => {
 		const drag = signal<Grid.Drag<TestRow>>({
 			__style: Grid.DragStyle.Html,
 			ItemView: vi.fn(),
 			dragging: { sourceIdx: 420, destIdx: 420 }
+		});
+		const rows: TestRow[] = [
+			{ key: () => 'jake', name: 'Jake' },
+			{ key: () => 'marceline', name: 'Marceline' }
+		];
+
+		const handle = signal({
+			spatulaType: Handle.SpatulaType.Dragging,
+			targetRect: { top: 0, left: 0, height: 0 }
+		});
+		mocks.useHandle.mockReturnValue(handle);
+
+		const handleIndex = signal(420);
+		mocks.useHandleIndex.mockReturnValue(handleIndex);
+
+		mocks.HandleView.mockImplementation(({ onDragEnd }) => {
+			setTimeout(() => {
+				onDragEnd();
+			}, 1);
+		});
+
+		const onReorder = vi.fn();
+		render(<Grid.View rows={rows} drag={drag} RowView={({ row }) => <div>{row.name}</div>} onReorder={onReorder} />);
+
+		await waitFor(() => {
+			if (drag.value.__style === Grid.DragStyle.Html) {
+				expect(handleIndex.value).toEqual(420);
+				expect(drag.value.dragging).toEqual(undefined);
+			} else {
+				expect.fail();
+			}
+
+			expect(onReorder).not.toHaveBeenCalled();
+			expect(Overlay.View).toHaveBeenCalled();
+			expect(Handle.View).toHaveBeenCalled();
+			expect(Handle.View).toHaveBeenCalledWith(expect.objectContaining({ state: handle }), expect.anything());
+		});
+	});
+
+	it('ends dragging, does not call Reorder when order is same, dest == source + 1', async () => {
+		const drag = signal<Grid.Drag<TestRow>>({
+			__style: Grid.DragStyle.Html,
+			ItemView: vi.fn(),
+			dragging: { sourceIdx: 420, destIdx: 421 }
 		});
 		const rows: TestRow[] = [
 			{ key: () => 'jake', name: 'Jake' },
