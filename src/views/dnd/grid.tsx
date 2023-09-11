@@ -1,7 +1,7 @@
 import { Signal, batch } from '@preact/signals';
 import { FunctionalComponent } from 'preact';
-import { useRef } from 'preact/hooks';
 import { classIf } from '../../lib/dom-helpers';
+import { useBoundingRect } from '../../lib/hooks';
 import styles from './grid.module.scss';
 import * as Handle from './handle';
 import * as Overlay from './overlay';
@@ -44,9 +44,10 @@ interface EventHandlers {
 }
 
 export const View = <R extends Keyed>({ drag, onReorder, rows, RowView, MenuView }: Args<R> & EventHandlers) => {
-	const gridWrapRef = useRef<HTMLDivElement>(null);
-	const handleTargetRef = useRef<HTMLTableRowElement>(null);
-	const handle = useHandle(handleTargetRef);
+	const [gridRect, gridWrapRef] = useBoundingRect<HTMLDivElement>();
+	const [targetRect, targetRowRef] = useBoundingRect();
+	// const handleTargetRef = useRef<HTMLTableRowElement>(null);
+	const handle = useHandle();
 
 	return (
 		<div ref={gridWrapRef} class={styles.grid}>
@@ -59,18 +60,20 @@ export const View = <R extends Keyed>({ drag, onReorder, rows, RowView, MenuView
 				<tbody>
 					{rows.map((row, i) => {
 						const dragState = drag.value.__style === DragStyle.Html ? drag.value : undefined;
+						const handleState = handle.value.state.value;
 
 						return (
 							<tr
 								key={row.key()}
-								ref={handle.value.idx === i ? handleTargetRef : undefined}
+								ref={handle.value.idx === i ? targetRowRef : undefined}
 								// This logic needs to consider the mouse position within the item.
 								class={classIf([
 									[styles.dragOver, i === dragState?.dragging?.destIdx],
 									[styles.dragSource, i === dragState?.dragging?.sourceIdx]
 								])}
 								onMouseEnter={
-									!dragState?.dragging && handle.value.idx !== i
+									(handleState === Handle.SpatulaType.Hidden || handleState === Handle.SpatulaType.Hovering) &&
+									handle.value.idx !== i
 										? () =>
 												batch(() => {
 													handle.value = { ...handle.value, idx: i };
@@ -110,7 +113,7 @@ export const View = <R extends Keyed>({ drag, onReorder, rows, RowView, MenuView
 
 			<Handle.View
 				state={handle.value.state}
-				targetRect={handle.value.targetRect}
+				targetRect={targetRect || { top: -100, height: 0, left: -100 - 100 }}
 				onDragStart={() => {
 					if (drag.value.__style === DragStyle.Html && handle.value.idx !== undefined) {
 						drag.value = {
@@ -143,15 +146,19 @@ export const View = <R extends Keyed>({ drag, onReorder, rows, RowView, MenuView
 				}
 			>
 				{MenuView && handle.value.idx >= 0 ? (
-					<MenuView row={rows[handle.value.idx]} rowIdx={handle.value.idx} targetRect={handle.value.targetRect} />
+					<MenuView
+						row={rows[handle.value.idx]}
+						rowIdx={handle.value.idx}
+						targetRect={targetRect || { top: -100, height: 0, left: -100 - 100 }}
+					/>
 				) : null}
 			</Handle.View>
 
 			{drag.value.__style === DragStyle.Html && drag.value.dragging ? (
 				<Overlay.View<R>
 					{...drag.value}
-					wrapperRect={gridWrapRef.current?.getBoundingClientRect() || { top: 0 }}
-					destRect={handleTargetRef.current?.getBoundingClientRect() || { top: 0 }}
+					wrapperRect={gridRect}
+					destRect={targetRect || { top: 0 }}
 					row={rows[drag.value.dragging.sourceIdx]}
 				/>
 			) : null}

@@ -1,4 +1,5 @@
 import { useSignal } from '@preact/signals';
+import { useCallback, useState } from 'preact/hooks';
 import { AppRoute } from '../router-utils';
 import { User, getGlobalState } from './state';
 
@@ -28,4 +29,19 @@ export const useGlobalState = (): SharedState => {
 	const currentRoute = useLiveSignal(s.currentRoute.value);
 
 	return { user: user.value, currentRoute: currentRoute.value };
+};
+
+/**
+ * refs and effects don't play nice together. useCallback fixes this.
+ * https://legacy.reactjs.org/docs/hooks-faq.html?source=post_page-----eb7c15198780--------------------------------#how-can-i-measure-a-dom-node
+ */
+export const useBoundingRect = <E extends HTMLElement>(): [DOMRect | undefined, (node: E | null) => void] => {
+	const [rect, setRect] = useState<DOMRect>();
+	const ref = useCallback((node: E | null) => {
+		if (node !== null) {
+			setRect((node as E).getBoundingClientRect());
+		}
+	}, []);
+
+	return [rect, ref];
 };

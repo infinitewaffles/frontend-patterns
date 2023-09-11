@@ -1,6 +1,5 @@
 import { renderHook } from '@testing-library/preact';
-import { createRef } from 'preact';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { SpatulaType } from './handle';
 import { overlayPosition, spatulaPosition, useHandle } from './utils';
 
@@ -37,22 +36,8 @@ describe('spatulaPosition', () => {
 
 describe('useHandle', () => {
 	it('initializes handle stuff', () => {
-		const ref = createRef<HTMLTableRowElement>();
-
-		const { result } = renderHook(() => useHandle(ref));
+		const { result } = renderHook(() => useHandle());
 		expect(result.current.value.state.value).toEqual(SpatulaType.Hidden);
 		expect(result.current.value.idx).toEqual(-1);
-		expect(result.current.value.targetRect).toEqual({ top: 0, left: 0, height: 0 });
-	});
-
-	it('updates targetRect', () => {
-		const getBoundingClientRect = vi.fn(() => ({ top: 111, left: 222, height: 333 }));
-		const ref = createRef<HTMLTableRowElement>();
-		ref.current = { getBoundingClientRect } as any;
-
-		const { result } = renderHook(() => useHandle(ref));
-		expect(result.current.value.state.value).toEqual(SpatulaType.Hidden);
-		expect(result.current.value.idx).toEqual(-1);
-		expect(result.current.value.targetRect).toEqual({ top: 111, left: 222, height: 333 });
 	});
 });

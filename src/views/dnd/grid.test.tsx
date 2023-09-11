@@ -46,11 +46,7 @@ describe(`<Grid.View> drag disabled`, async () => {
 		const RowView = vi.fn(({ row }) => <div>{row.name}</div>);
 		const MenuView = vi.fn();
 
-		const handle = signal({
-			state: signal(Handle.SpatulaType.Hidden),
-			idx: -1,
-			targetRect: { top: 0, height: 0, left: 0 }
-		});
+		const handle = signal({ state: signal(Handle.SpatulaType.Hidden), idx: -1 });
 		mocks.useHandle.mockReturnValue(handle);
 
 		render(<Grid.View rows={rows} drag={drag} RowView={RowView} MenuView={MenuView} />);
@@ -84,11 +80,7 @@ describe(`<Grid.View> drag disabled`, async () => {
 		const RowView = vi.fn(({ row }) => <div>{row.name}</div>);
 		const MenuView = vi.fn();
 
-		const handle = signal({
-			state: signal(Handle.SpatulaType.Menu),
-			idx: 0,
-			targetRect: { top: 0, height: 0, left: 0 }
-		});
+		const handle = signal({ state: signal(Handle.SpatulaType.Menu), idx: 0 });
 		mocks.useHandle.mockReturnValue(handle);
 
 		mocks.HandleView.mockImplementation(({ children }) => {
@@ -103,8 +95,7 @@ describe(`<Grid.View> drag disabled`, async () => {
 		expect(Overlay.View).not.toHaveBeenCalled();
 		expect(Handle.View).toHaveBeenCalledWith(
 			expect.objectContaining({
-				state: handle.value.state,
-				targetRect: { top: 0, height: 0, left: 0 }
+				state: handle.value.state
 			}),
 			expect.anything()
 		);
@@ -136,11 +127,7 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 			{ key: () => 'marceline', name: 'Marceline' }
 		];
 
-		const handle = signal({
-			state: signal(Handle.SpatulaType.Hidden),
-			idx: -1,
-			targetRect: { top: 0, height: 0, left: 0 }
-		});
+		const handle = signal({ state: signal(Handle.SpatulaType.Hidden), idx: -1 });
 		mocks.useHandle.mockReturnValue(handle);
 
 		render(<Grid.View rows={rows} drag={drag} RowView={({ row }) => <div>{row.name}</div>} />);
@@ -168,11 +155,7 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 			{ key: () => 'marceline', name: 'Marceline' }
 		];
 
-		const handle = signal({
-			state: signal(Handle.SpatulaType.Hidden),
-			idx: -1,
-			targetRect: { top: 0, height: 0, left: 0 }
-		});
+		const handle = signal({ state: signal(Handle.SpatulaType.Hidden), idx: -1 });
 		mocks.useHandle.mockReturnValue(handle);
 
 		render(<Grid.View rows={rows} drag={drag} RowView={({ row }) => <div>{row.name}</div>} />);
@@ -199,11 +182,7 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 			{ key: () => 'marceline', name: 'Marceline' }
 		];
 
-		const handle = signal({
-			state: signal(Handle.SpatulaType.Hovering),
-			idx: 420,
-			targetRect: { top: 0, height: 0, left: 0 }
-		});
+		const handle = signal({ state: signal(Handle.SpatulaType.Hovering), idx: 420 });
 		mocks.useHandle.mockReturnValue(handle);
 
 		mocks.HandleView.mockImplementation(({ onDragStart }) => {
@@ -236,11 +215,7 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 			{ key: () => 'marceline', name: 'Marceline' }
 		];
 
-		const handle = signal({
-			state: signal(Handle.SpatulaType.Dragging),
-			idx: -1,
-			targetRect: { top: 0, height: 0, left: 0 }
-		});
+		const handle = signal({ state: signal(Handle.SpatulaType.Dragging), idx: -1 });
 		mocks.useHandle.mockReturnValue(handle);
 
 		const onReorder = vi.fn();
@@ -287,11 +262,7 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 			}, 1);
 		});
 
-		const handle = signal({
-			state: signal(Handle.SpatulaType.Dragging),
-			idx: 421,
-			targetRect: { top: 0, height: 0, left: 0 }
-		});
+		const handle = signal({ state: signal(Handle.SpatulaType.Dragging), idx: 421 });
 		mocks.useHandle.mockReturnValue(handle);
 
 		const onReorder = vi.fn();
@@ -327,11 +298,7 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 			}, 1);
 		});
 
-		const handle = signal({
-			state: signal(Handle.SpatulaType.Dragging),
-			idx: 419,
-			targetRect: { top: 0, height: 0, left: 0 }
-		});
+		const handle = signal({ state: signal(Handle.SpatulaType.Dragging), idx: 419 });
 		mocks.useHandle.mockReturnValue(handle);
 
 		const onReorder = vi.fn();
@@ -361,11 +328,7 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 			{ key: () => 'marceline', name: 'Marceline' }
 		];
 
-		const handle = signal({
-			state: signal(Handle.SpatulaType.Dragging),
-			idx: 420,
-			targetRect: { top: 0, height: 0, left: 0 }
-		});
+		const handle = signal({ state: signal(Handle.SpatulaType.Dragging), idx: 420 });
 		mocks.useHandle.mockReturnValue(handle);
 
 		mocks.HandleView.mockImplementation(({ onDragEnd }) => {
@@ -400,11 +363,7 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 			{ key: () => 'marceline', name: 'Marceline' }
 		];
 
-		const handle = signal({
-			state: signal(Handle.SpatulaType.Dragging),
-			idx: 420,
-			targetRect: { top: 0, height: 0, left: 0 }
-		});
+		const handle = signal({ state: signal(Handle.SpatulaType.Dragging), idx: 420 });
 		mocks.useHandle.mockReturnValue(handle);
 
 		mocks.HandleView.mockImplementation(({ onDragEnd }) => {

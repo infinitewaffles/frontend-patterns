@@ -1,7 +1,7 @@
 import { signal } from '@preact/signals';
 import { renderHook, waitFor } from '@testing-library/preact';
 import { describe, expect, it, vi } from 'vitest';
-import { useGlobalState } from './hooks';
+import { useBoundingRect, useGlobalState } from './hooks';
 import { User, UserType } from './state';
 
 const mocks = vi.hoisted(() => ({
@@ -32,6 +32,22 @@ describe('useGlobalState', () => {
 		await waitFor(() => {
 			expect(result.current.user).toEqual({ userType: UserType.Authenticated, name: 'Bob Marley' });
 			expect(result.current.currentRoute).toEqual({ path: 'fwahoghads' });
+		});
+	});
+});
+
+describe('useBoundingRect', () => {
+	it('returns bounding rect', async () => {
+		const getBoundingClientRect = vi.fn(() => ({ top: 111, left: 222, height: 333 }));
+		const node = { getBoundingClientRect } as any;
+
+		const { result } = renderHook(() => useBoundingRect());
+		const [_, ref] = result.current;
+
+		ref({ getBoundingClientRect } as any);
+
+		await waitFor(() => {
+			expect(result.current[0]).toEqual({ top: 111, left: 222, height: 333 });
 		});
 	});
 });

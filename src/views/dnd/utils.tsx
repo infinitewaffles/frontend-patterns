@@ -1,5 +1,4 @@
 import { Signal, useSignal } from '@preact/signals';
-import { Ref, useEffect } from 'preact/hooks';
 import { JSXInternal } from 'preact/src/jsx';
 import { State as HandleState, SpatulaType } from './handle';
 
@@ -29,26 +28,14 @@ export const spatulaPosition = ({ targetRect, spatulaRect }: SpatulaPositionArgs
 interface HandleStuff {
 	state: Signal<HandleState>;
 	idx: number;
-	targetRect: Pick<DOMRect, 'top' | 'height' | 'left'>;
 }
 
-export const useHandle = (targetRef: Ref<HTMLTableRowElement>) => {
+export const useHandle = () => {
 	const s = useSignal(SpatulaType.Hidden);
 	const stuff = useSignal<HandleStuff>({
 		state: s,
-		idx: -1,
-		targetRect: { top: 0, height: 0, left: 0 }
+		idx: -1
 	});
-
-	useEffect(() => {
-		if (targetRef.current) {
-			stuff.value = { ...stuff.value, targetRect: targetRef.current.getBoundingClientRect() };
-		}
-	}, [
-		targetRef.current?.getBoundingClientRect().top,
-		targetRef.current?.getBoundingClientRect().height,
-		targetRef.current?.getBoundingClientRect().left
-	]);
 
 	return stuff;
 };
