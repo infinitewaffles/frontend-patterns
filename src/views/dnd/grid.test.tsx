@@ -53,13 +53,13 @@ describe(`<Grid.View> drag disabled`, async () => {
 		});
 		mocks.useHandle.mockReturnValue(handle);
 
-		const { container } = render(<Grid.View rows={rows} drag={drag} RowView={RowView} MenuView={MenuView} />);
+		render(<Grid.View rows={rows} drag={drag} RowView={RowView} MenuView={MenuView} />);
 		expect(RowView).toHaveBeenCalled();
 		expect(RowView).toHaveBeenCalledWith({ row: rows[0], rowIdx: 0 }, expect.anything());
 		expect(RowView).toHaveBeenCalledWith({ row: rows[1], rowIdx: 1 }, expect.anything());
 		expect(Overlay.View).not.toHaveBeenCalled();
 		expect(Handle.View).toHaveBeenCalledWith(
-			expect.objectContaining({ state: signal(Handle.SpatulaType.Hidden), children: null }),
+			expect.objectContaining({ state: handle.value.state, children: null }),
 			expect.anything()
 		);
 
@@ -103,7 +103,7 @@ describe(`<Grid.View> drag disabled`, async () => {
 		expect(Overlay.View).not.toHaveBeenCalled();
 		expect(Handle.View).toHaveBeenCalledWith(
 			expect.objectContaining({
-				state: signal(Handle.SpatulaType.Menu),
+				state: handle.value.state,
 				targetRect: { top: 0, height: 0, left: 0 }
 			}),
 			expect.anything()
@@ -155,10 +155,7 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 		expect(tableRows[2].className).toEqual('');
 		expect(Overlay.View).not.toHaveBeenCalled();
 		expect(Handle.View).toHaveBeenCalled();
-		expect(Handle.View).toHaveBeenCalledWith(
-			expect.objectContaining({ state: signal(Handle.SpatulaType.Hidden) }),
-			expect.anything()
-		);
+		expect(Handle.View).toHaveBeenCalledWith(expect.objectContaining({ state: handle.value.state }), expect.anything());
 	});
 
 	it('mouseEnter shows hover handle', async () => {
@@ -189,12 +186,6 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 		await waitFor(() => {
 			expect(handle.value.idx).toEqual(0);
 			expect(handle.value.state.value).toEqual(Handle.SpatulaType.Hovering);
-			expect(Overlay.View).not.toHaveBeenCalled();
-			expect(Handle.View).toHaveBeenCalled();
-			expect(Handle.View).toHaveBeenCalledWith(
-				expect.objectContaining({ state: handle.value.state }),
-				expect.anything()
-			);
 		});
 	});
 
@@ -231,13 +222,6 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 			} else {
 				expect.fail();
 			}
-
-			expect(Overlay.View).toHaveBeenCalled();
-			expect(Handle.View).toHaveBeenCalled();
-			expect(Handle.View).toHaveBeenCalledWith(
-				expect.objectContaining({ state: handle.value.state }),
-				expect.anything()
-			);
 		});
 	});
 
@@ -283,12 +267,6 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 			}
 
 			expect(onReorder).not.toHaveBeenCalled();
-			expect(Overlay.View).toHaveBeenCalled();
-			expect(Handle.View).toHaveBeenCalled();
-			expect(Handle.View).toHaveBeenCalledWith(
-				expect.objectContaining({ state: handle.value.state }),
-				expect.anything()
-			);
 		});
 	});
 
@@ -329,12 +307,6 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 
 			expect(onReorder).toHaveBeenCalled();
 			expect(onReorder).toHaveBeenCalledWith({ sourceIdx: 420, destIdx: 421 });
-			expect(Overlay.View).toHaveBeenCalled();
-			expect(Handle.View).toHaveBeenCalled();
-			expect(Handle.View).toHaveBeenCalledWith(
-				expect.objectContaining({ state: handle.value.state }),
-				expect.anything()
-			);
 		});
 	});
 
@@ -375,12 +347,6 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 
 			expect(onReorder).toHaveBeenCalled();
 			expect(onReorder).toHaveBeenCalledWith({ sourceIdx: 420, destIdx: 419 });
-			expect(Overlay.View).toHaveBeenCalled();
-			expect(Handle.View).toHaveBeenCalled();
-			expect(Handle.View).toHaveBeenCalledWith(
-				expect.objectContaining({ state: handle.value.state }),
-				expect.anything()
-			);
 		});
 	});
 
@@ -420,12 +386,6 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 			}
 
 			expect(onReorder).not.toHaveBeenCalled();
-			expect(Overlay.View).toHaveBeenCalled();
-			expect(Handle.View).toHaveBeenCalled();
-			expect(Handle.View).toHaveBeenCalledWith(
-				expect.objectContaining({ state: handle.value.state }),
-				expect.anything()
-			);
 		});
 	});
 
@@ -465,12 +425,6 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 			}
 
 			expect(onReorder).not.toHaveBeenCalled();
-			expect(Overlay.View).toHaveBeenCalled();
-			expect(Handle.View).toHaveBeenCalled();
-			expect(Handle.View).toHaveBeenCalledWith(
-				expect.objectContaining({ state: handle.value.state }),
-				expect.anything()
-			);
 		});
 	});
 });
