@@ -23,6 +23,18 @@ const rowData = adventureTimeCharacters.map((name) => ({
 	name
 }));
 
+const MenuView: FunctionalComponent<any> = ({ targetRect }) => {
+	return (
+		<div class={styles.menu} style={{ top: targetRect.top + 12, left: targetRect.left + 12 }}>
+			<ul>
+				{Array.from({ length: 5 }, (_, i) => (
+					<li>thing {i}</li>
+				))}
+			</ul>
+		</div>
+	);
+};
+
 export const View: FunctionalComponent<State> = ({ route }) => {
 	const rows = useSignal<TestRow[]>(rowData);
 	const drag = useSignal<Grid.Drag<TestRow>>({
@@ -34,6 +46,7 @@ export const View: FunctionalComponent<State> = ({ route }) => {
 		<div class={styles.page}>
 			<Grid.View<TestRow>
 				rows={rows.value}
+				MenuView={MenuView}
 				RowView={({ row }) => <div class={styles.row}>{row.name}</div>}
 				drag={drag}
 				onReorder={({ sourceIdx, destIdx }) => {

@@ -27,7 +27,7 @@ export type Drag<R> =
 export interface Args<R> {
 	rows: R[];
 	drag: Signal<Drag<R>>;
-	MenuView?: FunctionalComponent<{ row: R; rowIdx: number }>;
+	MenuView?: FunctionalComponent<{ row: R; rowIdx: number; targetRect: Pick<DOMRect, 'top' | 'height' | 'left'> }>;
 	RowView: FunctionalComponent<{
 		row: R;
 		rowIdx: number;
@@ -142,7 +142,9 @@ export const View = <R extends Keyed>({ drag, onReorder, rows, RowView, MenuView
 					})
 				}
 			>
-				{MenuView && handle.value.idx >= 0 ? <MenuView row={rows[handle.value.idx]} rowIdx={handle.value.idx} /> : null}
+				{MenuView && handle.value.idx >= 0 ? (
+					<MenuView row={rows[handle.value.idx]} rowIdx={handle.value.idx} targetRect={handle.value.targetRect} />
+				) : null}
 			</Handle.View>
 
 			{drag.value.__style === DragStyle.Html && drag.value.dragging ? (
