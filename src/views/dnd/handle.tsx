@@ -29,8 +29,6 @@ interface EventHandlers {
 
 const renderKey = '0990d2ac-970d-4d28-8653-5246ad94dcc1';
 
-export const useHandle = () => useSignal<State>(SpatulaType.Hidden);
-
 export const View: FunctionalComponent<{ state: Signal<State> } & Args & EventHandlers> = ({
 	state,
 	targetRect,

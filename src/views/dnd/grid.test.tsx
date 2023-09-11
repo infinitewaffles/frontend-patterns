@@ -8,8 +8,7 @@ import * as Overlay from './overlay';
 const mocks = vi.hoisted(() => ({
 	OverlayView: vi.fn(),
 	HandleView: vi.fn(),
-	useHandle: vi.fn(),
-	useHandleIndex: vi.fn()
+	useHandle: vi.fn()
 }));
 
 vi.mock('./overlay', async () => {
@@ -24,13 +23,12 @@ vi.mock('./handle', async () => {
 	const mod = await vi.importActual<typeof import('./handle')>('./handle');
 	return {
 		...mod,
-		useHandle: mocks.useHandle,
 		View: mocks.HandleView
 	};
 });
 
 vi.mock('./utils', () => ({
-	useHandleIndex: mocks.useHandleIndex
+	useHandle: mocks.useHandle
 }));
 
 describe(`<Grid.View> drag disabled`, async () => {
@@ -38,18 +36,33 @@ describe(`<Grid.View> drag disabled`, async () => {
 		name: string;
 	};
 
-	it('renders correctly', async () => {
+	it('renders correctly no spatula', async () => {
 		const drag = signal<Grid.Drag<TestRow>>({ __style: Grid.DragStyle.None });
 		const rows: TestRow[] = [
 			{ key: () => 'jake', name: 'Jake' },
 			{ key: () => 'marceline', name: 'Marceline' }
 		];
 
-		const handle = signal(Handle.SpatulaType.Hidden);
-		mocks.useHandle.mockReturnValue(handle);
-		mocks.useHandleIndex.mockReturnValue(signal(-1));
+		const RowView = vi.fn(({ row }) => <div>{row.name}</div>);
+		const MenuView = vi.fn();
 
-		render(<Grid.View rows={rows} drag={drag} RowView={({ row }) => <div>{row.name}</div>} />);
+		const handle = signal({
+			state: signal(Handle.SpatulaType.Hidden),
+			idx: -1,
+			targetRect: { top: 0, height: 0, left: 0 }
+		});
+		mocks.useHandle.mockReturnValue(handle);
+
+		const { container } = render(<Grid.View rows={rows} drag={drag} RowView={RowView} MenuView={MenuView} />);
+		expect(RowView).toHaveBeenCalled();
+		expect(RowView).toHaveBeenCalledWith({ row: rows[0], rowIdx: 0 }, expect.anything());
+		expect(RowView).toHaveBeenCalledWith({ row: rows[1], rowIdx: 1 }, expect.anything());
+		expect(Overlay.View).not.toHaveBeenCalled();
+		expect(Handle.View).toHaveBeenCalledWith(
+			expect.objectContaining({ state: signal(Handle.SpatulaType.Hidden), children: null }),
+			expect.anything()
+		);
+
 		const tableRows = await screen.findAllByRole('row');
 
 		expect(tableRows.length).toEqual(3);
@@ -59,9 +72,52 @@ describe(`<Grid.View> drag disabled`, async () => {
 		expect(tableRows[1].className).toEqual('');
 		expect(tableRows[2].textContent).toEqual('Marceline');
 		expect(tableRows[2].className).toEqual('');
+	});
+
+	it('renders menu', async () => {
+		const drag = signal<Grid.Drag<TestRow>>({ __style: Grid.DragStyle.None });
+		const rows: TestRow[] = [
+			{ key: () => 'jake', name: 'Jake' },
+			{ key: () => 'marceline', name: 'Marceline' }
+		];
+
+		const RowView = vi.fn(({ row }) => <div>{row.name}</div>);
+		const MenuView = vi.fn();
+
+		const handle = signal({
+			state: signal(Handle.SpatulaType.Menu),
+			idx: 0,
+			targetRect: { top: 0, height: 0, left: 0 }
+		});
+		mocks.useHandle.mockReturnValue(handle);
+
+		mocks.HandleView.mockImplementation(({ children }) => {
+			expect(children).not.toBeNull();
+			return null;
+		});
+
+		render(<Grid.View rows={rows} drag={drag} RowView={RowView} MenuView={MenuView} />);
+		expect(RowView).toHaveBeenCalled();
+		expect(RowView).toHaveBeenCalledWith({ row: rows[0], rowIdx: 0 }, expect.anything());
+		expect(RowView).toHaveBeenCalledWith({ row: rows[1], rowIdx: 1 }, expect.anything());
 		expect(Overlay.View).not.toHaveBeenCalled();
-		expect(Handle.View).toHaveBeenCalled();
-		expect(Handle.View).toHaveBeenCalledWith(expect.objectContaining({ state: handle }), expect.anything());
+		expect(Handle.View).toHaveBeenCalledWith(
+			expect.objectContaining({
+				state: signal(Handle.SpatulaType.Menu),
+				targetRect: { top: 0, height: 0, left: 0 }
+			}),
+			expect.anything()
+		);
+
+		const tableRows = await screen.findAllByRole('row');
+
+		expect(tableRows.length).toEqual(3);
+		expect(tableRows[0].textContent).toEqual('Table Header');
+		expect(tableRows[0].className).toEqual('');
+		expect(tableRows[1].textContent).toEqual('Jake');
+		expect(tableRows[1].className).toEqual('');
+		expect(tableRows[2].textContent).toEqual('Marceline');
+		expect(tableRows[2].className).toEqual('');
 	});
 });
 
@@ -81,11 +137,11 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 		];
 
 		const handle = signal({
-			spatulaType: Handle.SpatulaType.Hidden,
-			targetRect: { top: 0, left: 0, height: 0 }
+			state: signal(Handle.SpatulaType.Hidden),
+			idx: -1,
+			targetRect: { top: 0, height: 0, left: 0 }
 		});
 		mocks.useHandle.mockReturnValue(handle);
-		mocks.useHandleIndex.mockReturnValue(signal(-1));
 
 		render(<Grid.View rows={rows} drag={drag} RowView={({ row }) => <div>{row.name}</div>} />);
 
@@ -99,7 +155,10 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 		expect(tableRows[2].className).toEqual('');
 		expect(Overlay.View).not.toHaveBeenCalled();
 		expect(Handle.View).toHaveBeenCalled();
-		expect(Handle.View).toHaveBeenCalledWith(expect.objectContaining({ state: handle }), expect.anything());
+		expect(Handle.View).toHaveBeenCalledWith(
+			expect.objectContaining({ state: signal(Handle.SpatulaType.Hidden) }),
+			expect.anything()
+		);
 	});
 
 	it('mouseEnter shows hover handle', async () => {
@@ -111,14 +170,13 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 			{ key: () => 'jake', name: 'Jake' },
 			{ key: () => 'marceline', name: 'Marceline' }
 		];
+
 		const handle = signal({
-			spatulaType: Handle.SpatulaType.Hidden,
-			targetRect: { top: 0, left: 0, height: 0 }
+			state: signal(Handle.SpatulaType.Hidden),
+			idx: -1,
+			targetRect: { top: 0, height: 0, left: 0 }
 		});
 		mocks.useHandle.mockReturnValue(handle);
-
-		const handleIndex = signal(-1);
-		mocks.useHandleIndex.mockReturnValue(handleIndex);
 
 		render(<Grid.View rows={rows} drag={drag} RowView={({ row }) => <div>{row.name}</div>} />);
 
@@ -129,10 +187,14 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 		fireEvent.mouseEnter(el);
 
 		await waitFor(() => {
-			expect(handleIndex.value).toEqual(0);
+			expect(handle.value.idx).toEqual(0);
+			expect(handle.value.state.value).toEqual(Handle.SpatulaType.Hovering);
 			expect(Overlay.View).not.toHaveBeenCalled();
 			expect(Handle.View).toHaveBeenCalled();
-			expect(Handle.View).toHaveBeenCalledWith(expect.objectContaining({ state: handle }), expect.anything());
+			expect(Handle.View).toHaveBeenCalledWith(
+				expect.objectContaining({ state: handle.value.state }),
+				expect.anything()
+			);
 		});
 	});
 
@@ -147,13 +209,11 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 		];
 
 		const handle = signal({
-			spatulaType: Handle.SpatulaType.Hovering,
-			targetRect: { top: 0, left: 0, height: 0 }
+			state: signal(Handle.SpatulaType.Hovering),
+			idx: 420,
+			targetRect: { top: 0, height: 0, left: 0 }
 		});
 		mocks.useHandle.mockReturnValue(handle);
-
-		const handleIndex = signal(420);
-		mocks.useHandleIndex.mockReturnValue(handleIndex);
 
 		mocks.HandleView.mockImplementation(({ onDragStart }) => {
 			setTimeout(() => {
@@ -165,7 +225,7 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 
 		await waitFor(() => {
 			if (drag.value.__style === Grid.DragStyle.Html) {
-				expect(handleIndex.value).toEqual(420);
+				expect(handle.value.idx).toEqual(420);
 				expect(drag.value.dragging?.sourceIdx).toEqual(420);
 				expect(drag.value.dragging?.destIdx).toEqual(420);
 			} else {
@@ -174,7 +234,10 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 
 			expect(Overlay.View).toHaveBeenCalled();
 			expect(Handle.View).toHaveBeenCalled();
-			expect(Handle.View).toHaveBeenCalledWith(expect.objectContaining({ state: handle }), expect.anything());
+			expect(Handle.View).toHaveBeenCalledWith(
+				expect.objectContaining({ state: handle.value.state }),
+				expect.anything()
+			);
 		});
 	});
 
@@ -190,13 +253,11 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 		];
 
 		const handle = signal({
-			spatulaType: Handle.SpatulaType.Dragging,
-			targetRect: { top: 0, left: 0, height: 0 }
+			state: signal(Handle.SpatulaType.Dragging),
+			idx: -1,
+			targetRect: { top: 0, height: 0, left: 0 }
 		});
 		mocks.useHandle.mockReturnValue(handle);
-
-		const handleIndex = signal(undefined);
-		mocks.useHandleIndex.mockReturnValue(handleIndex);
 
 		const onReorder = vi.fn();
 		render(<Grid.View rows={rows} drag={drag} RowView={({ row }) => <div>{row.name}</div>} onReorder={onReorder} />);
@@ -209,7 +270,7 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 
 		await waitFor(() => {
 			if (drag.value.__style === Grid.DragStyle.Html) {
-				expect(handleIndex.value).toEqual(0);
+				expect(handle.value.idx).toEqual(0);
 
 				if (drag.value.dragging) {
 					expect(drag.value.dragging.sourceIdx).toEqual(420);
@@ -224,7 +285,10 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 			expect(onReorder).not.toHaveBeenCalled();
 			expect(Overlay.View).toHaveBeenCalled();
 			expect(Handle.View).toHaveBeenCalled();
-			expect(Handle.View).toHaveBeenCalledWith(expect.objectContaining({ state: handle }), expect.anything());
+			expect(Handle.View).toHaveBeenCalledWith(
+				expect.objectContaining({ state: handle.value.state }),
+				expect.anything()
+			);
 		});
 	});
 
@@ -246,20 +310,18 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 		});
 
 		const handle = signal({
-			spatulaType: Handle.SpatulaType.Dragging,
-			targetRect: { top: 0, left: 0, height: 0 }
+			state: signal(Handle.SpatulaType.Dragging),
+			idx: 421,
+			targetRect: { top: 0, height: 0, left: 0 }
 		});
 		mocks.useHandle.mockReturnValue(handle);
-
-		const handleIndex = signal(421);
-		mocks.useHandleIndex.mockReturnValue(handleIndex);
 
 		const onReorder = vi.fn();
 		render(<Grid.View rows={rows} drag={drag} RowView={({ row }) => <div>{row.name}</div>} onReorder={onReorder} />);
 
 		await waitFor(() => {
 			if (drag.value.__style === Grid.DragStyle.Html) {
-				expect(handleIndex.value).toEqual(421);
+				expect(handle.value.idx).toEqual(421);
 				expect(drag.value.dragging).toEqual(undefined);
 			} else {
 				expect.fail();
@@ -269,7 +331,10 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 			expect(onReorder).toHaveBeenCalledWith({ sourceIdx: 420, destIdx: 421 });
 			expect(Overlay.View).toHaveBeenCalled();
 			expect(Handle.View).toHaveBeenCalled();
-			expect(Handle.View).toHaveBeenCalledWith(expect.objectContaining({ state: handle }), expect.anything());
+			expect(Handle.View).toHaveBeenCalledWith(
+				expect.objectContaining({ state: handle.value.state }),
+				expect.anything()
+			);
 		});
 	});
 
@@ -291,20 +356,18 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 		});
 
 		const handle = signal({
-			spatulaType: Handle.SpatulaType.Dragging,
-			targetRect: { top: 0, left: 0, height: 0 }
+			state: signal(Handle.SpatulaType.Dragging),
+			idx: 419,
+			targetRect: { top: 0, height: 0, left: 0 }
 		});
 		mocks.useHandle.mockReturnValue(handle);
-
-		const handleIndex = signal(419);
-		mocks.useHandleIndex.mockReturnValue(handleIndex);
 
 		const onReorder = vi.fn();
 		render(<Grid.View rows={rows} drag={drag} RowView={({ row }) => <div>{row.name}</div>} onReorder={onReorder} />);
 
 		await waitFor(() => {
 			if (drag.value.__style === Grid.DragStyle.Html) {
-				expect(handleIndex.value).toEqual(419);
+				expect(handle.value.idx).toEqual(419);
 				expect(drag.value.dragging).toEqual(undefined);
 			} else {
 				expect.fail();
@@ -314,7 +377,10 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 			expect(onReorder).toHaveBeenCalledWith({ sourceIdx: 420, destIdx: 419 });
 			expect(Overlay.View).toHaveBeenCalled();
 			expect(Handle.View).toHaveBeenCalled();
-			expect(Handle.View).toHaveBeenCalledWith(expect.objectContaining({ state: handle }), expect.anything());
+			expect(Handle.View).toHaveBeenCalledWith(
+				expect.objectContaining({ state: handle.value.state }),
+				expect.anything()
+			);
 		});
 	});
 
@@ -330,13 +396,11 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 		];
 
 		const handle = signal({
-			spatulaType: Handle.SpatulaType.Dragging,
-			targetRect: { top: 0, left: 0, height: 0 }
+			state: signal(Handle.SpatulaType.Dragging),
+			idx: 420,
+			targetRect: { top: 0, height: 0, left: 0 }
 		});
 		mocks.useHandle.mockReturnValue(handle);
-
-		const handleIndex = signal(420);
-		mocks.useHandleIndex.mockReturnValue(handleIndex);
 
 		mocks.HandleView.mockImplementation(({ onDragEnd }) => {
 			setTimeout(() => {
@@ -349,7 +413,7 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 
 		await waitFor(() => {
 			if (drag.value.__style === Grid.DragStyle.Html) {
-				expect(handleIndex.value).toEqual(420);
+				expect(handle.value.idx).toEqual(420);
 				expect(drag.value.dragging).toEqual(undefined);
 			} else {
 				expect.fail();
@@ -358,7 +422,10 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 			expect(onReorder).not.toHaveBeenCalled();
 			expect(Overlay.View).toHaveBeenCalled();
 			expect(Handle.View).toHaveBeenCalled();
-			expect(Handle.View).toHaveBeenCalledWith(expect.objectContaining({ state: handle }), expect.anything());
+			expect(Handle.View).toHaveBeenCalledWith(
+				expect.objectContaining({ state: handle.value.state }),
+				expect.anything()
+			);
 		});
 	});
 
@@ -374,13 +441,11 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 		];
 
 		const handle = signal({
-			spatulaType: Handle.SpatulaType.Dragging,
-			targetRect: { top: 0, left: 0, height: 0 }
+			state: signal(Handle.SpatulaType.Dragging),
+			idx: 420,
+			targetRect: { top: 0, height: 0, left: 0 }
 		});
 		mocks.useHandle.mockReturnValue(handle);
-
-		const handleIndex = signal(420);
-		mocks.useHandleIndex.mockReturnValue(handleIndex);
 
 		mocks.HandleView.mockImplementation(({ onDragEnd }) => {
 			setTimeout(() => {
@@ -393,7 +458,7 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 
 		await waitFor(() => {
 			if (drag.value.__style === Grid.DragStyle.Html) {
-				expect(handleIndex.value).toEqual(420);
+				expect(handle.value.idx).toEqual(420);
 				expect(drag.value.dragging).toEqual(undefined);
 			} else {
 				expect.fail();
@@ -402,7 +467,10 @@ describe(`<Grid.View> drag with html overlay`, async () => {
 			expect(onReorder).not.toHaveBeenCalled();
 			expect(Overlay.View).toHaveBeenCalled();
 			expect(Handle.View).toHaveBeenCalled();
-			expect(Handle.View).toHaveBeenCalledWith(expect.objectContaining({ state: handle }), expect.anything());
+			expect(Handle.View).toHaveBeenCalledWith(
+				expect.objectContaining({ state: handle.value.state }),
+				expect.anything()
+			);
 		});
 	});
 });
